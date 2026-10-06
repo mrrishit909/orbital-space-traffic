@@ -26,14 +26,16 @@ function sunDir(t: number) {
 
 function camTarget(view: View, chapterF: number): Cam | null {
   const s = get();
-  const intro: Cam[] = [[0, 0, 0, 340, 0.9, 0.18], [0, 0, 0, 30, 0.6, 0.28], [0, 0, 0, 21, 0.2, 0.42], [0, 0, 0, 17, -0.4, 0.55]];
+  // intro and overview cameras sit a little off the Sun's direction, so the day side and the terminator are in view
+  const sun = sunDir(s.window.now || Date.now()), sunAz = Math.atan2(sun.x, sun.z);
+  const intro: Cam[] = [[0, 0, 0, 340, sunAz + 1.2, 0.18], [0, 0, 0, 30, sunAz + 0.9, 0.28], [0, 0, 0, 21, sunAz + 0.6, 0.42], [0, 0, 0, 17, sunAz + 0.35, 0.55]];
   if (isIntro(view)) {
     // scroll-driven: interpolate between chapter cameras by the fractional chapter (reduced motion snaps to whole chapters)
     const i = Math.floor(chapterF), f = chapterF - i, a = intro[Math.min(3, i)], b = intro[Math.min(3, i + 1)];
     const w = f * f * (3 - 2 * f);
     return a.map((x, k) => (k === 3 ? Math.exp(Math.log(x) * (1 - w) + Math.log(b[k]) * w) : x + (b[k] - x) * w)) as Cam;
   }
-  if (view === "explore") return [0, 0, 0, 24, 0.5, 0.35];
+  if (view === "explore") return [0, 0, 0, 24, sunAz + 0.8, 0.35];
   const o = s.selected !== null ? s.byNorad.get(s.selected) : undefined;
   if (view === "focus" && o) {
     // fly into the orbital plane: look down the orbit normal from about three orbit radii

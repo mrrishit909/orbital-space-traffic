@@ -111,7 +111,10 @@ export function earthMaterial(day: THREE.Texture, night: THREE.Texture) {
         float day = smoothstep(-0.08, 0.12, s); // civil-twilight-wide terminator
         vec3 d = texture2D(uDay, vUv).rgb * (0.25 + 0.85 * max(s, 0.0));
         vec3 n = texture2D(uNight, vUv).rgb * vec3(1.0, 0.85, 0.6) * 0.9;
-        vec3 col = mix(n, d, day);
+        // day-side haze: a cheap stand-in for Rayleigh scattering, brightest toward the limb (not a physical model)
+        float view = 1.0 - abs(dot(normalize(vN), normalize(cameraPosition)));
+        vec3 haze = vec3(0.10, 0.20, 0.38) * (0.55 + 0.9 * view) * max(s, 0.0);
+        vec3 col = mix(n, d * 1.15 + haze, day);
         gl_FragColor = vec4(col * (1.0 - 0.6 * uDim), 1.0);
       }`,
   });

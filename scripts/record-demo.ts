@@ -23,12 +23,13 @@ await page.goto(url);
 await page.waitForFunction(() => (window as unknown as { __orbital?: { state: () => { load: { status: string } } } }).__orbital?.state().load.status === "ready", null, { timeout: 60_000 });
 await caption(page, "ORBITAL: a space-traffic sandbox on a synthetic catalog of 18,050 objects, propagated with SGP4 in your browser.", 5000);
 const intro = page.getByLabel("Introduction");
-for (let i = 0; i < 36; i++) { await intro.evaluate((el) => el.scrollBy(0, 70)); await wait(110); }
-await caption(page, "Scrolling falls from deep space toward Earth. The globe turns with sidereal time and is lit by the Sun for the scene's moment.", 4500);
-for (let i = 0; i < 26; i++) { await intro.evaluate((el) => el.scrollBy(0, 70)); await wait(110); }
-await caption(page, "Objects appear by altitude: low Earth orbit first, then navigation orbits, then the geostationary belt. Shape marks the type.", 5000);
-for (let i = 0; i < 26; i++) { await intro.evaluate((el) => el.scrollBy(0, 70)); await wait(110); }
-await caption(page, "The demo operator's fleet: 60 satellites at 550 km, screened against everything for the next 24 hours.", 4500);
+const scroll = async (n: number) => { for (let i = 0; i < n; i++) { await intro.evaluate((el) => el.scrollBy(0, 70)); await wait(110); } };
+await caption(page, "Scrolling falls from deep space toward Earth. The globe turns with sidereal time and is lit by the Sun for the scene's moment.", 200);
+await scroll(36); await wait(3000);
+await caption(page, "Objects appear by altitude: low Earth orbit first, then navigation orbits, then the geostationary belt. Shape marks the type.", 200);
+await scroll(26); await wait(3500);
+await caption(page, "The demo operator's fleet: 60 satellites at 550 km, screened against everything for the next 24 hours.", 200);
+await scroll(26); await wait(3500);
 await page.getByRole("button", { name: "Open the operations sandbox" }).click();
 await caption(page, "The story hands over to the working product: same scene, now with the conjunction list, inspector and time scrubber.", 4500);
 await page.getByRole("combobox", { name: /Speed/ }).selectOption("300").catch(() => page.locator("select").first().selectOption("300"));
