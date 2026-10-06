@@ -1,0 +1,24 @@
+name: ci
+on: { push: { branches: [main] }, pull_request: {} }
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env: { POSTGRES_DB: orbital, POSTGRES_USER: orbital, POSTGRES_PASSWORD: owner-dev-only }
+        ports: ["55430:5432"]
+        options: --health-cmd "pg_isready -U orbital" --health-interval 2s --health-retries 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 24, cache: npm }
+      - run: npm ci
+      - run: npm audit --omit=dev --audit-level=high
+      - run: npx tsc -p . && (cd apps/web && npx tsc --noEmit -p .)
+      - run: node data/simulators/generate.ts
+      - run: npx vitest run --coverage   # fails under 85% line coverage of domain logic
+      - run: npx playwright install --with-deps chrome && npm run build -w @orbital/web && npx playwright test
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with: { name: playwright, path: test-results }

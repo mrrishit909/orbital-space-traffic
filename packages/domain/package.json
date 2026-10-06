@@ -1,0 +1,1 @@
+{"name":"@orbital/domain","private":true,"type":"module","exports":{".":"./src/index.ts"},"dependencies":{"satellite.js":"^7.1.0"}}

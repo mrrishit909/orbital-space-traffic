@@ -1,0 +1,1760 @@
+{
+ "openapi": "3.1.0",
+ "info": {
+  "title": "ORBITAL API",
+  "version": "1.0.0",
+  "description": "Space-traffic sandbox API on a synthetic catalog. Mutations need an Idempotency-Key header. Errors are {error:{code,message,traceId}}. Lists are paginated with ?limit and ?cursor (nextCursor)."
+ },
+ "components": {
+  "securitySchemes": {
+   "bearer": {
+    "type": "http",
+    "scheme": "bearer"
+   }
+  },
+  "schemas": {}
+ },
+ "paths": {
+  "/v1/catalog/compact": {
+   "get": {
+    "summary": "Whole catalog in the compact form the web app loads (public)",
+    "tags": [
+     "catalog"
+    ],
+    "parameters": [
+     {
+      "schema": {
+       "type": "string",
+       "enum": [
+        "outage"
+       ]
+      },
+      "in": "query",
+      "name": "simulate",
+      "required": false
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Default Response"
+     }
+    }
+   }
+  },
+  "/v1/objects": {
+   "get": {
+    "summary": "List objects; bbox filters by sub-satellite point at time `at`",
+    "tags": [
+     "catalog"
+    ],
+    "parameters": [
+     {
+      "schema": {
+       "type": "string",
+       "enum": [
+        "payload",
+        "rocket_body",
+        "debris",
+        "unknown"
+       ]
+      },
+      "in": "query",
+      "name": "type",
+      "required": false
+     },
+     {
+      "schema": {
+       "type": "string"
+      },
+      "in": "query",
+      "name": "operator",
+      "required": false
+     },
+     {
+      "schema": {
+       "type": "string",
+       "pattern": "^-?[\\d.]+,-?[\\d.]+,-?[\\d.]+,-?[\\d.]+$"
+      },
+      "in": "query",
+      "name": "bbox",
+      "required": false
+     },
+     {
+      "schema": {
+       "type": "string",
+       "format": "date-time"
+      },
+      "in": "query",
+      "name": "at",
+      "required": false
+     },
+     {
+      "schema": {
+       "type": "integer",
+       "minimum": 1,
+       "maximum": 1000,
+       "default": 100
+      },
+      "in": "query",
+      "name": "limit",
+      "required": false
+     },
+     {
+      "schema": {
+       "type": "string"
+      },
+      "in": "query",
+      "name": "cursor",
+      "required": false
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Default Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "required": [
+          "items"
+         ],
+         "properties": {
+          "items": {
+           "type": "array",
+           "items": {
+            "type": "object",
+            "required": [
+             "id",
+             "noradId",
+             "name",
+             "objectType"
+            ],
+            "properties": {
+             "id": {
+              "type": "string",
+              "format": "uuid"
+             },
+             "noradId": {
+              "type": "integer"
+             },
+             "cosparId": {
+              "type": "string"
+             },
+             "name": {
+              "type": "string"
+             },
+             "objectType": {
+              "type": "string",
+              "enum": [
+               "payload",
+               "rocket_body",
+               "debris",
+               "unknown"
+              ]
+             },
+             "operator": {
+              "type": [
+               "null",
+               "string"
+              ]
+             },
+             "massKg": {
+              "type": "number"
+             },
+             "radiusM": {
+              "type": "number"
+             },
+             "family": {
+              "type": "string"
+             }
+            }
+           }
+          },
+          "nextCursor": {
+           "type": [
+            "null",
+            "string"
+           ]
+          }
+         }
+        }
+       }
+      }
+     },
+     "400": {
+      "description": "Default Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "object",
+           "properties": {
+            "code": {
+             "type": "string"
+            },
+            "message": {
+             "type": "string"
+            },
+            "traceId": {
+             "type": "string"
+            },
+            "details": {}
+           },
+           "required": [
+            "code",
+            "message"
+           ]
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/v1/objects/{id}": {
+   "get": {
+    "tags": [
+     "catalog"
+    ],
+    "parameters": [
+     {
+      "schema": {
+       "type": "string"
+      },
+      "in": "path",
+      "name": "id",
+      "required": true
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Default Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "id": {
+           "type": "string",
+           "format": "uuid"
+          },
+          "noradId": {
+           "type": "integer"
+          },
+          "cosparId": {
+           "type": "string"
+          },
+          "name": {
+           "type": "string"
+          },
+          "objectType": {
+           "type": "string",
+           "enum": [
+            "payload",
+            "rocket_body",
+            "debris",
+            "unknown"
+           ]
+          },
+          "operator": {
+           "type": [
+            "null",
+            "string"
+           ]
+          },
+          "massKg": {
+           "type": "number"
+          },
+          "radiusM": {
+           "type": "number"
+          },
+          "family": {
+           "type": "string"
+          },
+          "tle": {
+           "type": "object",
+           "properties": {
+            "line1": {
+             "type": "string"
+            },
+            "line2": {
+             "type": "string"
+            },
+            "epoch": {
+             "type": "string"
+            }
+           }
+          },
+          "orbit": {
+           "type": "object",
+           "properties": {
+            "perigeeKm": {
+             "type": "number"
+            },
+            "apogeeKm": {
+             "type": "number"
+            },
+            "inclinationDeg": {
+             "type": "number"
+            },
+            "periodMin": {
+             "type": "number"
+            }
+           }
+          }
+         }
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "Default Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "object",
+           "properties": {
+            "code": {
+             "type": "string"
+            },
+            "message": {
+             "type": "string"
+            },
+            "traceId": {
+             "type": "string"
+            },
+            "details": {}
+           },
+           "required": [
+            "code",
+            "message"
+           ]
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/v1/objects/{id}/ephemeris": {
+   "get": {
+    "summary": "TEME states from SGP4 (max 2,000 points)",
+    "tags": [
+     "ephemeris"
+    ],
+    "parameters": [
+     {
+      "schema": {
+       "type": "string",
+       "format": "date-time"
+      },
+      "in": "query",
+      "name": "from",
+      "required": true
+     },
+     {
+      "schema": {
+       "type": "string",
+       "format": "date-time"
+      },
+      "in": "query",
+      "name": "to",
+      "required": true
+     },
+     {
+      "schema": {
+       "type": "integer",
+       "minimum": 1,
+       "maximum": 86400,
+       "default": 60
+      },
+      "in": "query",
+      "name": "step",
+      "required": false
+     },
+     {
+      "schema": {
+       "type": "string"
+      },
+      "in": "path",
+      "name": "id",
+      "required": true
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Default Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "frame": {
+           "type": "string"
+          },
+          "points": {
+           "type": "array",
+           "items": {
+            "type": "object",
+            "properties": {
+             "t": {
+              "type": "string"
+             },
+             "r": {
+              "type": "array",
+              "items": {
+               "type": "number"
+              },
+              "minItems": 3,
+              "maxItems": 3
+             },
+             "v": {
+              "type": "array",
+              "items": {
+               "type": "number"
+              },
+              "minItems": 3,
+              "maxItems": 3
+             }
+            }
+           }
+          }
+         }
+        }
+       }
+      }
+     },
+     "400": {
+      "description": "Default Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "object",
+           "properties": {
+            "code": {
+             "type": "string"
+            },
+            "message": {
+             "type": "string"
+            },
+            "traceId": {
+             "type": "string"
+            },
+            "details": {}
+           },
+           "required": [
+            "code",
+            "message"
+           ]
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "Default Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "object",
+           "properties": {
+            "code": {
+             "type": "string"
+            },
+            "message": {
+             "type": "string"
+            },
+            "traceId": {
+             "type": "string"
+            },
+            "details": {}
+           },
+           "required": [
+            "code",
+            "message"
+           ]
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/v1/propagate": {
+   "post": {
+    "summary": "Propagate a catalog object or an arbitrary TLE to given times",
+    "tags": [
+     "ephemeris"
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object",
+        "properties": {
+         "noradId": {
+          "type": "integer"
+         },
+         "line1": {
+          "type": "string",
+          "minLength": 69,
+          "maxLength": 69
+         },
+         "line2": {
+          "type": "string",
+          "minLength": 69,
+          "maxLength": 69
+         },
+         "times": {
+          "type": "array",
+          "items": {
+           "type": "string",
+           "format": "date-time"
+          },
+          "minItems": 1,
+          "maxItems": 1000
+         }
+        },
+        "required": [
+         "times"
+        ]
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Default Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "points": {
+           "type": "array",
+           "items": {
+            "type": "object",
+            "properties": {
+             "t": {
+              "type": "string"
+             },
+             "r": {
+              "type": [
+               "null",
+               "array"
+              ],
+              "items": {
+               "type": "number"
+              }
+             },
+             "v": {
+              "type": [
+               "null",
+               "array"
+              ],
+              "items": {
+               "type": "number"
+              }
+             }
+            }
+           }
+          }
+         }
+        }
+       }
+      }
+     },
+     "400": {
+      "description": "Default Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "object",
+           "properties": {
+            "code": {
+             "type": "string"
+            },
+            "message": {
+             "type": "string"
+            },
+            "traceId": {
+             "type": "string"
+            },
+            "details": {}
+           },
+           "required": [
+            "code",
+            "message"
+           ]
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "Default Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "object",
+           "properties": {
+            "code": {
+             "type": "string"
+            },
+            "message": {
+             "type": "string"
+            },
+            "traceId": {
+             "type": "string"
+            },
+            "details": {}
+           },
+           "required": [
+            "code",
+            "message"
+           ]
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/v1/conjunctions": {
+   "get": {
+    "tags": [
+     "conjunctions"
+    ],
+    "parameters": [
+     {
+      "schema": {
+       "type": "string",
+       "format": "date-time"
+      },
+      "in": "query",
+      "name": "from",
+      "required": false
+     },
+     {
+      "schema": {
+       "type": "string",
+       "format": "date-time"
+      },
+      "in": "query",
+      "name": "to",
+      "required": false
+     },
+     {
+      "schema": {
+       "type": "string",
+       "enum": [
+        "high",
+        "medium",
+        "low"
+       ]
+      },
+      "in": "query",
+      "name": "risk",
+      "required": false
+     },
+     {
+      "schema": {
+       "type": "string"
+      },
+      "in": "query",
+      "name": "full",
+      "required": false
+     },
+     {
+      "schema": {
+       "type": "integer",
+       "minimum": 1,
+       "maximum": 500,
+       "default": 500
+      },
+      "in": "query",
+      "name": "limit",
+      "required": false
+     },
+     {
+      "schema": {
+       "type": "string"
+      },
+      "in": "query",
+      "name": "cursor",
+      "required": false
+     }
+    ],
+    "security": [
+     {
+      "bearer": []
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Default Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "epoch": {
+           "type": "string"
+          },
+          "conjunctions": {
+           "type": "array",
+           "items": {
+            "type": "object",
+            "required": [
+             "id",
+             "primaryNorad",
+             "secondaryNorad",
+             "tca",
+             "missM",
+             "pc",
+             "risk"
+            ],
+            "properties": {
+             "id": {
+              "type": "string"
+             },
+             "primaryNorad": {
+              "type": "integer"
+             },
+             "secondaryNorad": {
+              "type": "integer"
+             },
+             "tca": {
+              "type": "string",
+              "format": "date-time"
+             },
+             "missM": {
+              "type": "number"
+             },
+             "relSpeedMs": {
+              "type": "number"
+             },
+             "pc": {
+              "type": "number"
+             },
+             "risk": {
+              "type": "string",
+              "enum": [
+               "high",
+               "medium",
+               "low"
+              ]
+             },
+             "hbrM": {
+              "type": "number"
+             },
+             "sigmaPlaneM": {
+              "type": "array",
+              "items": {
+               "type": "number"
+              }
+             },
+             "covKm2": {
+              "type": "array",
+              "items": {
+               "type": "array",
+               "items": {
+                "type": "number"
+               }
+              }
+             },
+             "rPrimary": {
+              "type": "array",
+              "items": {
+               "type": "number"
+              },
+              "minItems": 3,
+              "maxItems": 3
+             },
+             "vPrimary": {
+              "type": "array",
+              "items": {
+               "type": "number"
+              },
+              "minItems": 3,
+              "maxItems": 3
+             },
+             "rSecondary": {
+              "type": "array",
+              "items": {
+               "type": "number"
+              },
+              "minItems": 3,
+              "maxItems": 3
+             },
+             "vSecondary": {
+              "type": "array",
+              "items": {
+               "type": "number"
+              },
+              "minItems": 3,
+              "maxItems": 3
+             }
+            }
+           }
+          },
+          "nextCursor": {
+           "type": [
+            "null",
+            "string"
+           ]
+          }
+         }
+        }
+       }
+      }
+     },
+     "401": {
+      "description": "Default Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "object",
+           "properties": {
+            "code": {
+             "type": "string"
+            },
+            "message": {
+             "type": "string"
+            },
+            "traceId": {
+             "type": "string"
+            },
+            "details": {}
+           },
+           "required": [
+            "code",
+            "message"
+           ]
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/v1/conjunctions/{id}": {
+   "get": {
+    "tags": [
+     "conjunctions"
+    ],
+    "parameters": [
+     {
+      "schema": {
+       "type": "string"
+      },
+      "in": "path",
+      "name": "id",
+      "required": true
+     }
+    ],
+    "security": [
+     {
+      "bearer": []
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Default Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "required": [
+          "id",
+          "primaryNorad",
+          "secondaryNorad",
+          "tca",
+          "missM",
+          "pc",
+          "risk"
+         ],
+         "properties": {
+          "id": {
+           "type": "string"
+          },
+          "primaryNorad": {
+           "type": "integer"
+          },
+          "secondaryNorad": {
+           "type": "integer"
+          },
+          "tca": {
+           "type": "string",
+           "format": "date-time"
+          },
+          "missM": {
+           "type": "number"
+          },
+          "relSpeedMs": {
+           "type": "number"
+          },
+          "pc": {
+           "type": "number"
+          },
+          "risk": {
+           "type": "string",
+           "enum": [
+            "high",
+            "medium",
+            "low"
+           ]
+          },
+          "hbrM": {
+           "type": "number"
+          },
+          "sigmaPlaneM": {
+           "type": "array",
+           "items": {
+            "type": "number"
+           }
+          },
+          "covKm2": {
+           "type": "array",
+           "items": {
+            "type": "array",
+            "items": {
+             "type": "number"
+            }
+           }
+          },
+          "rPrimary": {
+           "type": "array",
+           "items": {
+            "type": "number"
+           },
+           "minItems": 3,
+           "maxItems": 3
+          },
+          "vPrimary": {
+           "type": "array",
+           "items": {
+            "type": "number"
+           },
+           "minItems": 3,
+           "maxItems": 3
+          },
+          "rSecondary": {
+           "type": "array",
+           "items": {
+            "type": "number"
+           },
+           "minItems": 3,
+           "maxItems": 3
+          },
+          "vSecondary": {
+           "type": "array",
+           "items": {
+            "type": "number"
+           },
+           "minItems": 3,
+           "maxItems": 3
+          }
+         }
+        }
+       }
+      }
+     },
+     "401": {
+      "description": "Default Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "object",
+           "properties": {
+            "code": {
+             "type": "string"
+            },
+            "message": {
+             "type": "string"
+            },
+            "traceId": {
+             "type": "string"
+            },
+            "details": {}
+           },
+           "required": [
+            "code",
+            "message"
+           ]
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "Default Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "object",
+           "properties": {
+            "code": {
+             "type": "string"
+            },
+            "message": {
+             "type": "string"
+            },
+            "traceId": {
+             "type": "string"
+            },
+            "details": {}
+           },
+           "required": [
+            "code",
+            "message"
+           ]
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/v1/conjunctions/{id}/maneuver-scenarios": {
+   "post": {
+    "summary": "Plan avoidance burns (simulation only) and re-screen each new orbit",
+    "tags": [
+     "maneuvers"
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object",
+        "properties": {
+         "targetPc": {
+          "type": "number",
+          "minimum": 1e-9,
+          "maximum": 0.001
+         },
+         "notBefore": {
+          "type": "string",
+          "format": "date-time"
+         }
+        }
+       }
+      }
+     }
+    },
+    "parameters": [
+     {
+      "schema": {
+       "type": "string"
+      },
+      "in": "path",
+      "name": "id",
+      "required": true
+     },
+     {
+      "schema": {
+       "type": "string",
+       "minLength": 8,
+       "maxLength": 128
+      },
+      "in": "header",
+      "name": "idempotency-key",
+      "required": true
+     }
+    ],
+    "security": [
+     {
+      "bearer": []
+     }
+    ],
+    "responses": {
+     "201": {
+      "description": "Default Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "conjunctionId": {
+           "type": "string"
+          },
+          "options": {
+           "type": "array",
+           "items": {
+            "type": "object",
+            "additionalProperties": true
+           }
+          },
+          "rejected": {
+           "type": "array",
+           "items": {
+            "type": "object",
+            "additionalProperties": true
+           }
+          },
+          "frontier": {
+           "type": "integer"
+          },
+          "maneuverIds": {
+           "type": "array",
+           "items": {
+            "type": "string"
+           }
+          }
+         }
+        }
+       }
+      }
+     },
+     "400": {
+      "description": "Default Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "object",
+           "properties": {
+            "code": {
+             "type": "string"
+            },
+            "message": {
+             "type": "string"
+            },
+            "traceId": {
+             "type": "string"
+            },
+            "details": {}
+           },
+           "required": [
+            "code",
+            "message"
+           ]
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "401": {
+      "description": "Default Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "object",
+           "properties": {
+            "code": {
+             "type": "string"
+            },
+            "message": {
+             "type": "string"
+            },
+            "traceId": {
+             "type": "string"
+            },
+            "details": {}
+           },
+           "required": [
+            "code",
+            "message"
+           ]
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "403": {
+      "description": "Default Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "object",
+           "properties": {
+            "code": {
+             "type": "string"
+            },
+            "message": {
+             "type": "string"
+            },
+            "traceId": {
+             "type": "string"
+            },
+            "details": {}
+           },
+           "required": [
+            "code",
+            "message"
+           ]
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "Default Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "object",
+           "properties": {
+            "code": {
+             "type": "string"
+            },
+            "message": {
+             "type": "string"
+            },
+            "traceId": {
+             "type": "string"
+            },
+            "details": {}
+           },
+           "required": [
+            "code",
+            "message"
+           ]
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "409": {
+      "description": "Default Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "object",
+           "properties": {
+            "code": {
+             "type": "string"
+            },
+            "message": {
+             "type": "string"
+            },
+            "traceId": {
+             "type": "string"
+            },
+            "details": {}
+           },
+           "required": [
+            "code",
+            "message"
+           ]
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/v1/alerts/rules": {
+   "post": {
+    "tags": [
+     "alerts"
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object",
+        "required": [
+         "name",
+         "scope",
+         "minPc",
+         "withinHours",
+         "channel",
+         "target"
+        ],
+        "properties": {
+         "name": {
+          "type": "string",
+          "maxLength": 80
+         },
+         "scope": {
+          "description": "\"fleet\" or a list of NORAD ids (checked by validateRule; a oneOf here would be mangled by type coercion)"
+         },
+         "minPc": {
+          "type": "number"
+         },
+         "maxMissM": {
+          "type": "number"
+         },
+         "withinHours": {
+          "type": "number"
+         },
+         "channel": {
+          "type": "string",
+          "enum": [
+           "email",
+           "webhook"
+          ]
+         },
+         "target": {
+          "type": "string"
+         }
+        }
+       }
+      }
+     }
+    },
+    "parameters": [
+     {
+      "schema": {
+       "type": "string",
+       "minLength": 8,
+       "maxLength": 128
+      },
+      "in": "header",
+      "name": "idempotency-key",
+      "required": true
+     }
+    ],
+    "security": [
+     {
+      "bearer": []
+     }
+    ],
+    "responses": {
+     "201": {
+      "description": "Default Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "rule": {
+           "type": "object",
+           "additionalProperties": true,
+           "properties": {
+            "id": {
+             "type": "string"
+            },
+            "createdAt": {
+             "type": "string"
+            }
+           }
+          },
+          "deliveries": {
+           "type": "array",
+           "items": {
+            "type": "object",
+            "additionalProperties": true
+           }
+          }
+         }
+        }
+       }
+      }
+     },
+     "400": {
+      "description": "Default Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "object",
+           "properties": {
+            "code": {
+             "type": "string"
+            },
+            "message": {
+             "type": "string"
+            },
+            "traceId": {
+             "type": "string"
+            },
+            "details": {}
+           },
+           "required": [
+            "code",
+            "message"
+           ]
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "401": {
+      "description": "Default Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "object",
+           "properties": {
+            "code": {
+             "type": "string"
+            },
+            "message": {
+             "type": "string"
+            },
+            "traceId": {
+             "type": "string"
+            },
+            "details": {}
+           },
+           "required": [
+            "code",
+            "message"
+           ]
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "403": {
+      "description": "Default Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "object",
+           "properties": {
+            "code": {
+             "type": "string"
+            },
+            "message": {
+             "type": "string"
+            },
+            "traceId": {
+             "type": "string"
+            },
+            "details": {}
+           },
+           "required": [
+            "code",
+            "message"
+           ]
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "409": {
+      "description": "Default Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "object",
+           "properties": {
+            "code": {
+             "type": "string"
+            },
+            "message": {
+             "type": "string"
+            },
+            "traceId": {
+             "type": "string"
+            },
+            "details": {}
+           },
+           "required": [
+            "code",
+            "message"
+           ]
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     }
+    }
+   },
+   "get": {
+    "tags": [
+     "alerts"
+    ],
+    "security": [
+     {
+      "bearer": []
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Default Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "items": {
+           "type": "array",
+           "items": {
+            "type": "object",
+            "additionalProperties": true
+           }
+          }
+         }
+        }
+       }
+      }
+     },
+     "401": {
+      "description": "Default Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "object",
+           "properties": {
+            "code": {
+             "type": "string"
+            },
+            "message": {
+             "type": "string"
+            },
+            "traceId": {
+             "type": "string"
+            },
+            "details": {}
+           },
+           "required": [
+            "code",
+            "message"
+           ]
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/v1/audit": {
+   "get": {
+    "tags": [
+     "admin"
+    ],
+    "security": [
+     {
+      "bearer": []
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Default Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "items": {
+           "type": "array",
+           "items": {
+            "type": "object",
+            "additionalProperties": true
+           }
+          },
+          "chainValid": {
+           "type": "boolean"
+          }
+         }
+        }
+       }
+      }
+     },
+     "401": {
+      "description": "Default Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "object",
+           "properties": {
+            "code": {
+             "type": "string"
+            },
+            "message": {
+             "type": "string"
+            },
+            "traceId": {
+             "type": "string"
+            },
+            "details": {}
+           },
+           "required": [
+            "code",
+            "message"
+           ]
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/v1/ground-stations": {
+   "get": {
+    "tags": [
+     "catalog"
+    ],
+    "responses": {
+     "200": {
+      "description": "Default Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "items": {
+           "type": "array",
+           "items": {
+            "type": "object",
+            "additionalProperties": true
+           }
+          }
+         }
+        }
+       }
+      }
+     }
+    }
+   }
+  }
+ },
+ "servers": [
+  {
+   "url": "http://localhost:8430"
+  }
+ ]
+}
