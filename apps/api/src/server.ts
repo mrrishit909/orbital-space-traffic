@@ -12,7 +12,7 @@ import {
   type AlertRule, type BatchPropagator, type Conjunction,
 } from "../../../packages/domain/src/index.ts";
 import { wasmBatch } from "../../../packages/domain/src/wasm.ts";
-import { audit, pool, sha256, withTenant } from "./db.ts";
+import { audit, canonical, pool, sha256, withTenant } from "./db.ts";
 
 interface Auth { org: string; slug: string; role: "viewer" | "operator" | "admin"; label: string }
 declare module "fastify" { interface FastifyRequest { auth?: Auth; traceId: string; t0: bigint } }
@@ -292,7 +292,7 @@ export async function build(opts: { catalog?: Catalog; rateLimit?: number; mail?
     const a = need(req);
     const r = await withTenant(a.org, (c) => c.query("SELECT tenant_id, actor, action, target, detail, prev_hash, hash, at FROM audit_log ORDER BY id"));
     let prev = "genesis", ok = true;
-    for (const x of r.rows) { if (x.prev_hash !== prev || sha256(prev + JSON.stringify({ tenant: x.tenant_id, actor: x.actor, action: x.action, target: x.target, detail: x.detail })) !== x.hash) ok = false; prev = x.hash; }
+    for (const x of r.rows) { if (x.prev_hash !== prev || sha256(prev + canonical({ tenant: x.tenant_id, actor: x.actor, action: x.action, target: x.target, detail: x.detail })) !== x.hash) ok = false; prev = x.hash; }
     return { items: r.rows.map((x) => ({ actor: x.actor, action: x.action, target: x.target, at: x.at })), chainValid: ok };
   });
 

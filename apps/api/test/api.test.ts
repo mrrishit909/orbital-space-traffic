@@ -146,6 +146,9 @@ describe("mutations: idempotency, validation, audit", () => {
     expect((await call("GET", "/v1/ground-stations")).json().items[0].latDeg).toBeCloseTo(78.23);
     expect(a.json().items.map((x: { action: string }) => x.action)).toEqual(["alert_rule.create", "maneuver.plan"]);
     expect(a.json().chainValid).toBe(true);
+    // keys in a different order hash the same (jsonb does not preserve order)
+    const { canonical } = await import("../src/db.ts");
+    expect(canonical({ b: 1, a: { d: [2, { y: 1, x: 0 }], c: null } })).toBe(canonical({ a: { c: null, d: [2, { x: 0, y: 1 }] }, b: 1 }));
     expect((await call("GET", "/v1/audit", OTHER)).json().items).toHaveLength(0);
   });
 });
