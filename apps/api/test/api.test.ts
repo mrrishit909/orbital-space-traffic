@@ -97,6 +97,10 @@ describe("authorization matrix and tenant isolation", () => {
     const c = new pg.Client({ connectionString: process.env.DATABASE_URL ?? "postgresql://orbital_app:app-dev-only@127.0.0.1:55430/orbital" });
     await c.connect();
     expect((await c.query("SELECT count(*)::int n FROM conjunction_events")).rows[0].n).toBe(0); // no tenant set: nothing
+    // a pooled connection that was used by a tenant comes back with app.tenant = '': still nothing, and no cast error
+    await c.query("BEGIN"); await c.query("SELECT set_config('app.tenant', (SELECT id::text FROM organizations WHERE slug = 'aurora'), true)"); await c.query("COMMIT");
+    expect((await c.query("SELECT current_setting('app.tenant', true) s")).rows[0].s).toBe("");
+    expect((await c.query("SELECT count(*)::int n FROM conjunction_events")).rows[0].n).toBe(0);
     const lattice = (await c.query("SELECT id FROM organizations WHERE slug = 'lattice'")).rows[0].id;
     await c.query("BEGIN"); await c.query("SELECT set_config('app.tenant', $1, true)", [lattice]);
     expect((await c.query("SELECT count(*)::int n FROM conjunction_events")).rows[0].n).toBe(0);
